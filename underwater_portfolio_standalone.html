@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="An immersive underwater portfolio experience. Explore my work, skills, and projects through a cinematic dive into the ocean.">
+    <meta name="theme-color" content="#000814">
+    <title>Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: oklch(0.6 0.25 260);
+            --primary-foreground: oklch(0.98 0.01 260);
+            --background: oklch(0.08 0.01 260);
+            --foreground: oklch(0.95 0.01 260);
+            --card: oklch(0.15 0.02 260 / 0.6);
+            --card-foreground: oklch(0.95 0.01 260);
+            --accent: oklch(0.6 0.28 200);
+            --accent-foreground: oklch(0.08 0.01 260);
+            --border: oklch(0.3 0.1 260 / 0.3);
+            --radius: 0.65rem;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 7rem);
+        }
+
+        h2 {
+            font-size: clamp(2rem, 6vw, 5rem);
+        }
+
+        h3 {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+        }
+
+        .glass {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--accent);
+            
+            border-radius: 1rem;
+        }
+
+        .glow {
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: oklch(0.6 0.25 260 / 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: oklch(0.6 0.25 260 / 0.8);
+        }
+
+        /* Canvas */
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            backdrop-filter: blur(10px);
+            background: rgba(8, 13, 20, 0.2);
+            border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+            padding: 1rem 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        nav.hidden {
+            transform: translateY(-100%);
+        }
+
+        .nav-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 1.125rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #00d9ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d9ff, #7b2cbf);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .nav-items {
+            display: none;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .nav-items {
+                display: flex;
+            }
+        }
+
+        .nav-items a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .nav-items a:hover {
+            color: #00d9ff;
+        }
+
+        .depth-meter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .depth-info {
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        @media (min-width: 640px) {
+            .depth-info {
+                display: flex;
+            }
+        }
+
+        .depth-info .depth-value {
+            font-family: 'Courier New', monospace;
+            color: #00d9ff;
+        }
+
+        .depth-info .depth-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .depth-indicator {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: rgba(0, 217, 255, 0.2);
+            border: 1px solid rgba(0, 217, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .depth-indicator::after {
+            content: '';
+            width: 0.25rem;
+            height: 1.5rem;
+            background: #00d9ff;
+            border-radius: 2px;
+            transition: height 0.3s;
+        }
+
+        /* Main content */
+        main {
+            position: relative;
+            z-index: 20;
+        }
+
+        section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-content {
+            max-width: 80rem;
+            width: 100%;
+            z-index: 10;
+        }
+
+        /* Hero Section */
+        #hero {
+            background: linear-gradient(180deg,
+                rgba(0, 168, 232, 0.3) 0%,
+                rgba(0, 153, 216, 0.2) 50%,
+                rgba(0, 20, 40, 0.1) 100%);
+        }
+
+        .hero-content {
+            text-align: center;
+        }
+
+        .hero-subtitle {
+            color: #00d9ff;
+            font-size: 0.875rem;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease 0.3s forwards;
+        }
+
+        .hero-title {
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease 0.5s forwards;
+            line-height: 1.2;
+        }
+
+        .hero-title .gradient {
+            background: linear-gradient(to right, #00d9ff, #0099d8, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease 0.7s forwards;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease 0.9s forwards;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #00d9ff, #0099d8);
+            color: #000814;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #00d9ff;
+            color: #00d9ff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator p {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .scroll-indicator svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: #00d9ff;
+        }
+
+        /* About Section */
+        #about {
+            background: linear-gradient(180deg,
+                rgba(0, 153, 216, 0.2) 0%,
+                rgba(0, 212, 255, 0.15) 50%,
+                rgba(0, 20, 60, 0.2) 100%);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .about-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .about-text {
+            space-y: 1.5rem;
+        }
+
+        .about-text p {
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .strengths {
+            margin-top: 2rem;
+        }
+
+        .strengths h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #00d9ff;
+        }
+
+        .strengths ul {
+            list-style: none;
+            space-y: 0.75rem;
+        }
+
+        .strengths li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.75rem;
+        }
+
+        .strengths li::before {
+            content: '';
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: #00d9ff;
+            flex-shrink: 0;
+        }
+
+        .stats-card {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: transform 0.3s;
+        }
+
+        .stats-card:hover {
+            transform: scale(1.05);
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00d9ff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0.25rem;
+            background: rgba(0, 217, 255, 0.2);
+            border-radius: 9999px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #00d9ff, #0099d8);
+            border-radius: 9999px;
+            animation: fillProgress 1.5s ease forwards;
+        }
+
+        /* Skills Section */
+        #skills {
+            background: linear-gradient(180deg,
+                rgba(0, 78, 137, 0.3) 0%,
+                rgba(0, 61, 107, 0.4) 50%,
+                rgba(10, 14, 39, 0.5) 100%);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .skills-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .skill-category {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .skill-category:hover {
+            border-color: rgba(0, 217, 255, 0.5);
+        }
+
+        .skill-category h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #00d9ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .skill-tag {
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            background: linear-gradient(to right, #00d9ff, #0099d8);
+            color: #000814;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .skill-tag:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+        }
+
+        /* Projects Section */
+        #projects {
+            background: linear-gradient(180deg,
+                rgba(0, 61, 107, 0.3) 0%,
+                rgba(0, 78, 137, 0.4) 50%,
+                rgba(10, 20, 60, 0.5) 100%);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .projects-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .projects-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        .project-card {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(0, 217, 255, 0.5);
+        }
+
+        .project-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--foreground);
+            margin-bottom: 0.5rem;
+        }
+
+        .project-card:hover .project-title {
+            color: #00d9ff;
+        }
+
+        .project-description {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0, 217, 255, 0.2);
+        }
+
+        .project-tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background: linear-gradient(to right, #00d9ff, #0099d8);
+            color: #000814;
+            font-weight: 600;
+        }
+
+        /* Experience Section */
+        #experience {
+            background: linear-gradient(180deg,
+                rgba(10, 14, 39, 0.4) 0%,
+                rgba(15, 10, 50, 0.5) 50%,
+                rgba(10, 5, 30, 0.6) 100%);
+        }
+
+        .timeline {
+            space-y: 3rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 3rem;
+            opacity: 0;
+            animation: fadeInLeft 0.8s ease forwards;
+        }
+
+        .timeline-item:nth-child(1) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.6s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.8s; }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0.25rem;
+            background: linear-gradient(to bottom, #00d9ff, rgba(0, 217, 255, 0.5), transparent);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -0.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: #00d9ff;
+            border: 2px solid var(--background);
+            transition: transform 0.3s;
+        }
+
+        .timeline-item:hover .timeline-dot {
+            transform: scale(1.5);
+        }
+
+        .timeline-content {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .timeline-item:hover .timeline-content {
+            border-color: rgba(0, 217, 255, 0.5);
+            transform: translateX(10px);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .timeline-role {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--foreground);
+        }
+
+        .timeline-company {
+            color: #00d9ff;
+            font-weight: 600;
+        }
+
+        .timeline-period {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timeline-description {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .achievements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .achievement {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background: rgba(0, 217, 255, 0.2);
+            color: #00d9ff;
+            font-weight: 600;
+        }
+
+        /* Contact Section */
+        #contact {
+            background: linear-gradient(180deg,
+                rgba(10, 5, 30, 0.5) 0%,
+                rgba(5, 5, 20, 0.6) 50%,
+                rgba(0, 0, 10, 0.7) 100%);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+
+        @media (min-width: 768px) {
+            .contact-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem 1rem;
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 0.5rem;
+            color: var(--foreground);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00d9ff;
+            background: rgba(0, 217, 255, 0.15);
+        }
+
+        .form-group textarea {
+            resize: none;
+            min-height: 150px;
+        }
+
+        .contact-info {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+
+        .contact-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #00d9ff;
+        }
+
+        .contact-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-value {
+            color: var(--foreground);
+            font-weight: 600;
+        }
+
+        .social-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 0.5rem;
+            color: var(--foreground);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .social-link:hover {
+            background: rgba(0, 217, 255, 0.2);
+            border-color: rgba(0, 217, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(8, 13, 20, 0.5);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0, 217, 255, 0.2);
+            padding: 2rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        .footer-section h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--foreground);
+        }
+
+        .footer-section ul {
+            list-style: none;
+            space-y: 0.5rem;
+        }
+
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: #00d9ff;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(0, 217, 255, 0.2);
+            padding-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            text-align: center;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (min-width: 768px) {
+            .footer-bottom {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        /* Cursor */
+        .custom-cursor {
+            position: fixed;
+            width: 1.5rem;
+            height: 1.5rem;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+        }
+
+        .custom-cursor.active {
+            display: block;
+        }
+
+        .cursor-circle {
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(0, 217, 255, 0.6);
+            border-radius: 50%;
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .cursor-circle::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border: 1px solid rgba(0, 217, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(10px);
+            }
+        }
+
+        @keyframes fillProgress {
+            from {
+                width: 0;
+            }
+            to {
+                width: var(--progress-width, 80%);
+            }
+        }
+
+        @keyframes ripple {
+            from {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+            }
+            to {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+
+        /* Section headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .section-label {
+            color: #00d9ff;
+            font-size: 0.875rem;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 6vw, 5rem);
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #00d9ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-divider {
+            width: 6rem;
+            height: 0.25rem;
+            background: linear-gradient(to right, #00d9ff, #7b2cbf);
+            margin: 0 auto;
+            border-radius: 9999px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .nav-items {
+                display: none;
+            }
+
+            section {
+                padding: 3rem 1rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .about-grid,
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-item {
+                padding-left: 2rem;
+            }
+
+            .timeline-item::before {
+                left: -0.5rem;
+            }
+
+            .timeline-dot {
+                left: -1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-content">
+            <div class="logo" onclick="scrollToSection('hero')">
+                <div class="logo-icon">D</div>
+                <span>Dive</span>
+            </div>
+            <div class="nav-items">
+                <a onclick="scrollToSection('hero')">Hero</a>
+                <a onclick="scrollToSection('about')">About</a>
+                <a onclick="scrollToSection('skills')">Skills</a>
+                <a onclick="scrollToSection('projects')">Projects</a>
+                <a onclick="scrollToSection('experience')">Experience</a>
+                <a onclick="scrollToSection('contact')">Contact</a>
+            </div>
+            <div class="depth-meter">
+                <div class="depth-info">
+                    <div class="depth-value" id="depthValue">0m</div>
+                    <div class="depth-label" id="depthLabel">Surface</div>
+                </div>
+                <div class="depth-indicator">
+                    <div id="depthBar"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Canvas for Three.js -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="hero">
+            <div class="section-content">
+                <div class="hero-content">
+                    <p class="hero-subtitle">Welcome to the Deep</p>
+                    <h1 class="hero-title">
+                        <span class="gradient">Dive Into</span><br>My World
+                    </h1>
+                    <p class="hero-description">
+                        Explore an immersive underwater journey through my portfolio. Scroll down to descend deeper into my skills, projects, and experience.
+                    </p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary" onclick="scrollToSection('about')">Dive In</button>
+                        <button class="btn btn-secondary" onclick="scrollToSection('about')">Learn More</button>
+                    </div>
+                </div>
+                <div class="scroll-indicator">
+                    <p>Scroll to Descend</p>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="section-content">
+                <div class="section-header">
+                    <p class="section-label">Shallow Reef Zone - 30m</p>
+                    <h2 class="section-title">About Me</h2>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div class="about-grid">
+                    <div class="about-text">
+                        <p>I'm a passionate full-stack developer and creative technologist with a deep love for building immersive digital experiences. My journey in tech has been defined by curiosity, continuous learning, and a commitment to creating solutions that matter.</p>
+                        <p>With expertise spanning frontend, backend, and emerging technologies, I thrive at the intersection of design and engineering. I believe great products come from understanding both the technical and human sides of the equation.</p>
+                        <div class="strengths">
+                            <h3>Key Strengths</h3>
+                            <ul>
+                                <li>Full-Stack Development</li>
+                                <li>UI/UX Design</li>
+                                <li>Performance Optimization</li>
+                                <li>Team Leadership</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="stats-card">
+                        <div class="stat">
+                            <span class="stat-label">Experience</span>
+                            <span class="stat-value">8+</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="--progress-width: 80%;"></div>
+                        </div>
+
+                        <div class="stat">
+                            <span class="stat-label">Projects Completed</span>
+                            <span class="stat-value">50+</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="--progress-width: 90%;"></div>
+                        </div>
+
+                        <div class="stat">
+                            <span class="stat-label">Clients Satisfied</span>
+                            <span class="stat-value">30+</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="--progress-width: 95%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills">
+            <div class="section-content">
+                <div class="section-header">
+                    <p class="section-label">Deep Ocean Zone - 1000m</p>
+                    <h2 class="section-title">Skills & Expertise</h2>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h3>Frontend</h3>
+                        <div class="skill-tags">
+                            <span class="skill-tag">React</span>
+                            <span class="skill-tag">TypeScript</span>
+                            <span class="skill-tag">Tailwind CSS</span>
+                            <span class="skill-tag">Framer Motion</span>
+                            <span class="skill-tag">Three.js</span>
+                        </div>
+                    </div>
+
+                    <div class="skill-category">
+                        <h3>Backend</h3>
+                        <div class="skill-tags">
+                            <span class="skill-tag">Node.js</span>
+                            <span class="skill-tag">Python</span>
+                            <span class="skill-tag">PostgreSQL</span>
+                            <span class="skill-tag">GraphQL</span>
+                            <span class="skill-tag">REST APIs</span>
+                        </div>
+                    </div>
+
+                    <div class="skill-category">
+                        <h3>Tools & DevOps</h3>
+                        <div class="skill-tags">
+                            <span class="skill-tag">Git</span>
+                            <span class="skill-tag">Docker</span>
+                            <span class="skill-tag">AWS</span>
+                            <span class="skill-tag">CI/CD</span>
+                            <span class="skill-tag">Vercel</span>
+                        </div>
+                    </div>
+
+                    <div class="skill-category">
+                        <h3>Design</h3>
+                        <div class="skill-tags">
+                            <span class="skill-tag">Figma</span>
+                            <span class="skill-tag">UI/UX</span>
+                            <span class="skill-tag">Animation</span>
+                            <span class="skill-tag">Accessibility</span>
+                            <span class="skill-tag">Performance</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects">
+            <div class="section-content">
+                <div class="section-header">
+                    <p class="section-label">Mid Ocean Zone - 200m</p>
+                    <h2 class="section-title">Featured Projects</h2>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <h3 class="project-title">Immersive 3D Portfolio</h3>
+                        <p class="project-description">An interactive underwater-themed portfolio with Three.js animations and scroll-driven interactions.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">React</span>
+                            <span class="project-tag">Three.js</span>
+                            <span class="project-tag">GSAP</span>
+                            <span class="project-tag">Tailwind</span>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <h3 class="project-title">E-Commerce Platform</h3>
+                        <p class="project-description">Full-stack e-commerce solution with real-time inventory, payment processing, and admin dashboard.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Next.js</span>
+                            <span class="project-tag">PostgreSQL</span>
+                            <span class="project-tag">Stripe</span>
+                            <span class="project-tag">GraphQL</span>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <h3 class="project-title">Real-Time Collaboration</h3>
+                        <p class="project-description">Browser-based collaborative workspace with real-time updates and conflict resolution.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Node.js</span>
+                            <span class="project-tag">WebSocket</span>
+                            <span class="project-tag">React</span>
+                            <span class="project-tag">MongoDB</span>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <h3 class="project-title">AI-Powered Analytics</h3>
+                        <p class="project-description">Advanced analytics platform with machine learning insights and predictive modeling.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Python</span>
+                            <span class="project-tag">TensorFlow</span>
+                            <span class="project-tag">React</span>
+                            <span class="project-tag">D3.js</span>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <h3 class="project-title">Mobile App Framework</h3>
+                        <p class="project-description">Cross-platform mobile development framework with native performance and code sharing.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">React Native</span>
+                            <span class="project-tag">TypeScript</span>
+                            <span class="project-tag">Firebase</span>
+                            <span class="project-tag">Redux</span>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <h3 class="project-title">Design System Library</h3>
+                        <p class="project-description">Comprehensive component library with accessibility features and extensive documentation.</p>
+                        <div class="project-tags">
+                            <span class="project-tag">Storybook</span>
+                            <span class="project-tag">TypeScript</span>
+                            <span class="project-tag">Tailwind</span>
+                            <span class="project-tag">A11y</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experience Section -->
+        <section id="experience">
+            <div class="section-content">
+                <div class="section-header">
+                    <p class="section-label">Abyss Zone - 3000m</p>
+                    <h2 class="section-title">Professional Journey</h2>
+                    <div class="section-divider"></div>
+                </div>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <div>
+                                    <div class="timeline-role">Senior Full-Stack Developer</div>
+                                    <div class="timeline-company">Tech Innovations Inc.</div>
+                                </div>
+                                <div class="timeline-period">2022 - Present</div>
+                            </div>
+                            <p class="timeline-description">Led development of scalable web applications, mentored junior developers, and architected microservices infrastructure.</p>
+                            <div class="achievements">
+                                <span class="achievement">✓ Reduced load time by 60%</span>
+                                <span class="achievement">✓ Led team of 5 engineers</span>
+                                <span class="achievement">✓ Shipped 10+ features</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <div>
+                                    <div class="timeline-role">Full-Stack Developer</div>
+                                    <div class="timeline-company">Digital Solutions Co.</div>
+                                </div>
+                                <div class="timeline-period">2020 - 2022</div>
+                            </div>
+                            <p class="timeline-description">Developed and maintained multiple client-facing applications, implemented CI/CD pipelines, and optimized database queries.</p>
+                            <div class="achievements">
+                                <span class="achievement">✓ Improved performance by 45%</span>
+                                <span class="achievement">✓ Automated deployment</span>
+                                <span class="achievement">✓ Mentored 2 interns</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <div>
+                                    <div class="timeline-role">Frontend Developer</div>
+                                    <div class="timeline-company">Creative Studio</div>
+                                </div>
+                                <div class="timeline-period">2018 - 2020</div>
+                            </div>
+                            <p class="timeline-description">Built responsive user interfaces, implemented animations, and collaborated with design teams on UX improvements.</p>
+                            <div class="achievements">
+                                <span class="achievement">✓ Won design award</span>
+                                <span class="achievement">✓ Accessibility standards</span>
+                                <span class="achievement">✓ +35% engagement</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <div>
+                                    <div class="timeline-role">Junior Developer</div>
+                                    <div class="timeline-company">StartUp Ventures</div>
+                                </div>
+                                <div class="timeline-period">2016 - 2018</div>
+                            </div>
+                            <p class="timeline-description">Started career learning full-stack development, contributed to various projects, and built foundational skills.</p>
+                            <div class="achievements">
+                                <span class="achievement">✓ First production app</span>
+                                <span class="achievement">✓ Learned React & Node</span>
+                                <span class="achievement">✓ 2 years experience</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact">
+            <div class="section-content">
+                <div class="section-header">
+                    <p class="section-label">Ocean Floor Zone - 4000m</p>
+                    <h2 class="section-title">Get In Touch</h2>
+                    <div class="section-divider"></div>
+                    <p style="color: rgba(255, 255, 255, 0.7); margin-top: 1rem; font-size: 1.125rem;">Have a project in mind? Let's explore the depths together.</p>
+                </div>
+
+                <div class="contact-grid">
+                    <form class="contact-form" onsubmit="handleContactSubmit(event)">
+                        <div class="form-group">
+                            <input type="text" name="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" name="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="subject" placeholder="Subject" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea name="message" placeholder="Your Message" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+
+                    <div>
+                        <div class="contact-info">
+                            <h3>Contact Information</h3>
+                            <div class="contact-item">
+                                <div class="contact-label">Email</div>
+                                <div class="contact-value">hello@example.com</div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-label">Location</div>
+                                <div class="contact-value">San Francisco, CA</div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-label">Response Time</div>
+                                <div class="contact-value">Within 24 hours</div>
+                            </div>
+                        </div>
+
+                        <div class="contact-info" style="margin-top: 1.5rem;">
+                            <h3>Connect With Me</h3>
+                            <div class="social-links">
+                                <a href="#" class="social-link">⚙️ GitHub</a>
+                                <a href="#" class="social-link">💼 LinkedIn</a>
+                                <a href="#" class="social-link">𝕏 Twitter</a>
+                                <a href="#" class="social-link">✉️ Email</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Dive Portfolio</h3>
+                <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.6);">An immersive underwater journey through my work.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a onclick="scrollToSection('hero')">Home</a></li>
+                    <li><a onclick="scrollToSection('about')">About</a></li>
+                    <li><a onclick="scrollToSection('projects')">Projects</a></li>
+                    <li><a onclick="scrollToSection('contact')">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <ul>
+                    <li><a href="#">Resume</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">GitHub</a></li>
+                    <li><a href="#">LinkedIn</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 All rights reserved. Built with HTML, CSS, and JavaScript.</p>
+            <div>
+                <a href="#" style="margin: 0 1rem;">Privacy Policy</a>
+                <a href="#" style="margin: 0 1rem;">Terms of Service</a>
+                <a href="#" style="margin: 0 1rem;">Sitemap</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Cursor -->
+    <div class="custom-cursor" id="customCursor">
+        <div class="cursor-circle"></div>
+    </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Main JavaScript -->
+    <script>
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.textContent = 'Message Sent! 🎉';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                form.reset();
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
+        }
+
+        // ============================================
+        // SCROLL MANAGEMENT
+        // ============================================
+
+        let lastScrollY = 0;
+        let scrollProgress = 0;
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            scrollProgress = docHeight > 0 ? scrollTop / docHeight : 0;
+
+            // Update depth meter
+            updateDepthMeter(scrollProgress);
+
+            // Hide/show navbar
+            const navbar = document.getElementById('navbar');
+            if (scrollTop > lastScrollY && scrollTop > 100) {
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                navbar.style.transform = 'translateY(0)';
+            }
+            lastScrollY = scrollTop;
+        });
+
+        function updateDepthMeter(progress) {
+            const depths = [
+                { label: 'Surface', depth: '0m', min: 0, max: 0.15 },
+                { label: 'Shallow Reef', depth: '30m', min: 0.15, max: 0.3 },
+                { label: 'Mid Ocean', depth: '200m', min: 0.3, max: 0.45 },
+                { label: 'Deep Ocean', depth: '1000m', min: 0.45, max: 0.6 },
+                { label: 'Abyss', depth: '3000m', min: 0.6, max: 0.75 },
+                { label: 'Ocean Floor', depth: '4000m', min: 0.75, max: 1 }
+            ];
+
+            const current = depths.find(d => progress >= d.min && progress < d.max) || depths[0];
+            document.getElementById('depthValue').textContent = current.depth;
+            document.getElementById('depthLabel').textContent = current.label;
+
+            const depthBar = document.getElementById('depthBar');
+            depthBar.style.height = Math.max(4, progress * 24) + 'px';
+        }
+
+        // ============================================
+        // CUSTOM CURSOR
+        // ============================================
+
+        const customCursor = document.getElementById('customCursor');
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            customCursor.style.left = mouseX + 'px';
+            customCursor.style.top = mouseY + 'px';
+            customCursor.classList.add('active');
+        });
+
+        document.addEventListener('mouseleave', () => {
+            customCursor.classList.remove('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            createRipple(e.clientX, e.clientY);
+        });
+
+        function createRipple(x, y) {
+            const ripple = document.createElement('div');
+            ripple.style.position = 'fixed';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.style.width = '20px';
+            ripple.style.height = '20px';
+            ripple.style.border = '2px solid rgba(0, 217, 255, 0.6)';
+            ripple.style.borderRadius = '50%';
+            ripple.style.pointerEvents = 'none';
+            ripple.style.zIndex = '40';
+            ripple.style.transform = 'translate(-50%, -50%)';
+            ripple.style.animation = 'ripple 0.6s ease-out forwards';
+            document.body.appendChild(ripple);
+
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        // ============================================
+        // THREE.JS UNDERWATER CANVAS
+        // ============================================
+
+        const canvas = document.getElementById('canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+
+        camera.position.z = 5;
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000814, 1);
+        renderer.shadowMap.enabled = true;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x4a9eff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 7);
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+
+        // Particles
+        const particleCount = 1000;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        const particleVelocities = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            particlePositions[i] = (Math.random() - 0.5) * 100;
+            particlePositions[i + 1] = (Math.random() - 0.5) * 100;
+            particlePositions[i + 2] = (Math.random() - 0.5) * 100;
+            particleVelocities[i] = (Math.random() - 0.5) * 0.1;
+            particleVelocities[i + 1] = (Math.random() - 0.5) * 0.05;
+            particleVelocities[i + 2] = (Math.random() - 0.5) * 0.1;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            color: 0x00d9ff,
+            size: 0.1,
+            transparent: true,
+            opacity: 0.6,
+            sizeAttenuation: true,
+        });
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+
+        // Bubbles
+        const bubblesGroup = new THREE.Group();
+        for (let i = 0; i < 30; i++) {
+            const bubbleGeometry = new THREE.SphereGeometry(Math.random() * 0.3 + 0.1, 8, 8);
+            const bubbleMaterial = new THREE.MeshPhongMaterial({
+                color: 0x00d9ff,
+                transparent: true,
+                opacity: 0.3,
+                emissive: 0x00a8e8,
+                emissiveIntensity: 0.5,
+            });
+            const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
+            bubble.position.set(
+                (Math.random() - 0.5) * 50,
+                (Math.random() - 0.5) * 50,
+                (Math.random() - 0.5) * 50
+            );
+            bubble.userData.velocity = {
+                x: (Math.random() - 0.5) * 0.05,
+                y: Math.random() * 0.1 + 0.05,
+                z: (Math.random() - 0.5) * 0.05,
+            };
+            bubblesGroup.add(bubble);
+        }
+        scene.add(bubblesGroup);
+
+        // Diver
+        const diverGroup = new THREE.Group();
+        const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 8);
+        const bodyMaterial = new THREE.MeshPhongMaterial({
+            color: 0x1a1a2e,
+            emissive: 0x00d9ff,
+            emissiveIntensity: 0.2,
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.castShadow = true;
+        diverGroup.add(body);
+
+        const headGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+        const headMaterial = new THREE.MeshPhongMaterial({
+            color: 0x2a2a3e,
+            emissive: 0x00d9ff,
+            emissiveIntensity: 0.3,
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 1.2;
+        head.castShadow = true;
+        diverGroup.add(head);
+
+        diverGroup.position.set(0, 5, 0);
+        scene.add(diverGroup);
+
+        // Light rays
+        const lightRaysGroup = new THREE.Group();
+        for (let i = 0; i < 5; i++) {
+            const rayGeometry = new THREE.ConeGeometry(0.5, 20, 8);
+            const rayMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffd700,
+                emissive: 0xffa500,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.1,
+            });
+            const ray = new THREE.Mesh(rayGeometry, rayMaterial);
+            ray.position.set((i - 2) * 3, 10, -5);
+            ray.rotation.z = Math.PI / 4;
+            lightRaysGroup.add(ray);
+        }
+        scene.add(lightRaysGroup);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Update particles
+            const positions = particlesGeometry.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                positions[i] += particleVelocities[i];
+                positions[i + 1] += particleVelocities[i + 1];
+                positions[i + 2] += particleVelocities[i + 2];
+
+                if (positions[i] > 50) positions[i] = -50;
+                if (positions[i] < -50) positions[i] = 50;
+                if (positions[i + 1] > 50) positions[i + 1] = -50;
+                if (positions[i + 1] < -50) positions[i + 1] = 50;
+                if (positions[i + 2] > 50) positions[i + 2] = -50;
+                if (positions[i + 2] < -50) positions[i + 2] = 50;
+            }
+            particlesGeometry.attributes.position.needsUpdate = true;
+
+            // Update bubbles
+            bubblesGroup.children.forEach((bubble) => {
+                bubble.position.x += bubble.userData.velocity.x;
+                bubble.position.y += bubble.userData.velocity.y;
+                bubble.position.z += bubble.userData.velocity.z;
+
+                if (bubble.position.y > 50) bubble.position.y = -50;
+                if (bubble.position.x > 50) bubble.position.x = -50;
+                if (bubble.position.x < -50) bubble.position.x = 50;
+            });
+
+            // Update diver
+            diverGroup.position.y = 5 - scrollProgress * 15;
+            diverGroup.rotation.z = Math.sin(Date.now() * 0.001) * 0.1;
+
+            // Update light rays
+            lightRaysGroup.children.forEach((ray) => {
+                ray.rotation.x += 0.001;
+                ray.position.y = 10 - scrollProgress * 5;
+                if (ray.material.opacity !== undefined) {
+                    ray.material.opacity = 0.1 * (1 - scrollProgress * 0.5);
+                }
+            });
+
+            // Update camera
+            camera.position.y = scrollProgress * 10;
+            camera.lookAt(0, scrollProgress * 10, 0);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+
+        // Initialize depth meter
+        updateDepthMeter(0);
+    </script>
+</body>
+</html>
